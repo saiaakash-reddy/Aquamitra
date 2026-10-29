@@ -1,5 +1,5 @@
 // Change the version number whenever you update the app, so phones fetch the new files.
-const CACHE = 'aqua-mitra-v4';
+const CACHE = 'aqua-mitra-v6';
 const FILES = ['./', 'index.html', 'manifest.json', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', e => {
@@ -17,6 +17,8 @@ self.addEventListener('activate', e => {
 // Serve from cache first (works offline), and refresh the cache in the background.
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
+  const u = new URL(e.request.url);
+  if (u.origin !== location.origin && u.hostname !== 'www.gstatic.com') return; // never cache Firebase API calls
   e.respondWith(
     caches.match(e.request).then(hit => {
       const net = fetch(e.request).then(res => {
