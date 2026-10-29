@@ -45,7 +45,7 @@ input:focus,select:focus{outline:none;border-color:var(--accent);background:var(
 .yn{display:flex;gap:8px;flex:none}
 .mini{font:inherit;font-weight:700;font-size:18px;min-height:52px;padding:0 18px;border-radius:14px;border:0;box-shadow:inset 0 0 0 2px var(--accent);background:transparent;color:var(--accent);cursor:pointer}
 .mini.yes{background:#c62828;box-shadow:none;color:#fff}
-.hero{text-align:center;border-radius:20px;padding:22px 16px;margin:14px 0;background:var(--navy);color:#fff;font-size:17px}
+.greeting{margin:14px 0 18px;padding:18px 16px;border-radius:18px;background:var(--tint);color:var(--ink);font-size:22px;font-weight:800}.hero{text-align:center;border-radius:20px;padding:22px 16px;margin:14px 0;background:var(--navy);color:#fff;font-size:17px}
 .hero b{display:block;font-size:40px;line-height:1.2}
 .stats{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .stat{background:var(--card);border-radius:18px;padding:14px;box-shadow:var(--shadow)}
@@ -89,7 +89,12 @@ const T = {
   namePlaceholder: ['Enter your name', 'మీ పేరు నమోదు చేయండి'],
   eFarmerName: ['Please enter your name.', 'దయచేసి మీ పేరు నమోదు చేయండి.'],
   profile: ['Profile', 'ప్రొఫైల్'],
+  changeName: ['Change farmer name', 'రైతు పేరు మార్చండి'],
   saveName: ['Save name', 'పేరు సేవ్ చేయండి'],
+  cancel: ['Cancel', 'రద్దు'],
+  goodMorning: ['Good morning, {0}! 👋', 'శుభోదయం, {0}! 👋'],
+  goodAfternoon: ['Good afternoon, {0}! 👋', 'శుభ మధ్యాహ్నం, {0}! 👋'],
+  goodEvening: ['Good evening, {0}! 👋', 'శుభ సాయంత్రం, {0}! 👋'],
   profileSaved: ['Name updated successfully.', 'పేరు విజయవంతంగా మార్చబడింది.'],
   resetPassword: ['Send password reset link', 'పాస్‌వర్డ్ రీసెట్ లింక్ పంపండి'],
   needNet: ['Please connect to the internet once to start the app.', 'యాప్ ప్రారంభించడానికి ఒక్కసారి ఇంటర్నెట్‌కు కనెక్ట్ అవ్వండి.'],
@@ -221,7 +226,7 @@ const firebaseConfig = {
 const cfgMissing = String(firebaseConfig.apiKey).startsWith('PASTE');
 let fb = null, auth = null, db = null, me = null, meLabel = '', loaded = false, unsub = null;
 let authState = 'loading', authMode = 'in', authErr = '', authOk = '', authEm = '', authName = '';
-let profileOpen = false, profileErr = '', profileOk = '';
+let profileOpen = false, profileEditing = false, profileErr = '', profileOk = '';
 const last = {}; // last version of each pond that was sent to the server
 
 // Each pond is one document: users/{userId}/ponds/{pondId}, holding its feed log and costs.
@@ -273,14 +278,18 @@ function topbar() {
   const profileButton = authState === 'in'
     ? `<button class="profile-btn" data-act="profile" aria-label="${t('profile')}" title="${t('profile')}">${esc((meLabel || auth.currentUser?.email || 'F').trim().charAt(0).toUpperCase())}</button>`
     : '';
-  return `<div class="hdr-wrap"><div class="hdr"><img src="icon-192.png" alt=""><div><h1>${t('title')}</h1><small>${t('tagline')}</small></div>${profileButton}<button class="lang" data-act="lang">${te() ? 'English' : 'తెలుగు'}</button></div>${profileMenu()}</div>`;
+  const languageButton = authState !== 'in' ? `<button class="lang" data-act="lang">${te() ? 'English' : 'తెలుగు'}</button>` : '';
+  return `<div class="hdr-wrap"><div class="hdr"><img src="icon-192.png" alt=""><div><h1>${t('title')}</h1><small>${t('tagline')}</small></div>${profileButton}${languageButton}</div>${profileMenu()}</div>`;
 }
 
 function profileMenu() {
   if (!profileOpen || authState !== 'in') return '';
   const email = auth.currentUser?.email || '';
   const name = auth.currentUser?.displayName || '';
-  return `<div class="profile-menu card"><div class="profile-ident"><div class="av">${esc((meLabel || email || 'F').trim().charAt(0).toUpperCase())}</div><div class="ptext"><b>${esc(meLabel || email)}</b><p class="mute">${esc(email)}</p></div></div><label>${t('farmerName')}<input id="profile-name" autocomplete="name" maxlength="80" value="${esc(name)}" placeholder="${t('namePlaceholder')}"></label>${profileErr ? `<p class="err">${t(profileErr)}</p>` : ''}${profileOk ? `<p class="ok">${t(profileOk)}</p>` : ''}<button class="btn" data-act="saveprofile">${t('saveName')}</button><button class="btn sec" data-act="profilereset">${t('resetPassword')}</button>${ask === 'out' ? `<p>${t('askOut')}</p><div class="g2"><button class="btn danger" data-act="out">${t('yes')}</button><button class="btn sec" data-act="no">${t('no')}</button></div>` : `<button class="btn sec" data-act="askout">${t('logout')}</button>`}</div>`;
+  const nameEditor = profileEditing
+    ? `<label>${t('farmerName')}<input id="profile-name" autocomplete="name" maxlength="80" value="${esc(name)}" placeholder="${t('namePlaceholder')}"></label><div class="g2"><button class="btn" data-act="saveprofile">${t('saveName')}</button><button class="btn sec" data-act="profilecancel">${t('cancel')}</button></div>`
+    : `<button class="btn" data-act="editprofile">${t('changeName')}</button>`;
+  return `<div class="profile-menu card"><div class="profile-ident"><div class="av">${esc((meLabel || email || 'F').trim().charAt(0).toUpperCase())}</div><div class="ptext"><b>${esc(meLabel || email)}</b><p class="mute">${esc(email)}</p></div></div>${nameEditor}${profileErr ? `<p class="err">${t(profileErr)}</p>` : ''}${profileOk ? `<p class="ok">${t(profileOk)}</p>` : ''}<button class="btn sec" data-act="lang">${te() ? 'English' : 'తెలుగు'}</button><button class="btn sec" data-act="profilereset">${t('resetPassword')}</button>${ask === 'out' ? `<p>${t('askOut')}</p><div class="g2"><button class="btn danger" data-act="out">${t('yes')}</button><button class="btn sec" data-act="no">${t('no')}</button></div>` : `<button class="btn sec" data-act="askout">${t('logout')}</button>`}</div>`;
 }
 
 async function saveProfile() {
@@ -289,7 +298,7 @@ async function saveProfile() {
   if (!name) { profileErr = 'eFarmerName'; render(); return; }
   try {
     await fb.updateProfile(auth.currentUser, { displayName: name });
-    meLabel = name; profileOk = 'profileSaved';
+    meLabel = name; profileOk = 'profileSaved'; profileEditing = false;
     render();
   } catch (e) {
     profileErr = (e.code || '').includes('network') ? 'eNet' : 'eGeneric';
@@ -340,7 +349,10 @@ function homeView() {
     const f = S.feed.filter(x => x.cid === c.id), tk = sum(f.filter(x => x.date === d), x => x.kg), last = newest(f)[0];
     return `<button class="pond ${c.done ? 'done' : ''}" data-act="open" data-id="${c.id}"><span class="av">${esc(String(c.name).replace(/^Pond\s*/i, '').slice(0, 3) || '🦐')}</span><div class="pb"><div class="split"><b>${esc(pn(c.name))}</b><span class="badge ${c.done ? '' : 'live'}">${t(c.done ? 'completed' : 'active')}</span></div><div class="mute" style="margin:0">${t('today')}: ${num(tk)} kg · ${last ? t('lastFeed') + ' ' + dt(last.date) + (last.time ? ', ' + tm(last.time) : '') : t('noFeed')}</div></div></button>`;
   };
-  return topbar() + `<div class="stats"><div class="stat navy"><span>${t('activePonds')}</span><b>${act.length}</b></div><div class="stat orange"><span>${t('feedToday')}</span><b>${num(kg)} kg</b></div></div><h2 style="margin:20px 0 0">${t('yourPonds')}</h2>${ordered.map(card).join('')}<button class="btn" data-act="newc">${t('addPondBtn')}</button>`;
+  const hour = new Date().getHours();
+  const greetingKey = hour < 12 ? 'goodMorning' : hour < 17 ? 'goodAfternoon' : 'goodEvening';
+  const farmer = (meLabel || auth.currentUser?.displayName || '').trim() || t('farmerName');
+  return topbar() + `<div class="greeting">${t(greetingKey, esc(farmer))}</div><div class="stats"><div class="stat navy"><span>${t('activePonds')}</span><b>${act.length}</b></div><div class="stat orange"><span>${t('feedToday')}</span><b>${num(kg)} kg</b></div></div><h2 style="margin:20px 0 0">${t('yourPonds')}</h2>${ordered.map(card).join('')}<button class="btn" data-act="newc">${t('addPondBtn')}</button>`;
 }
 
 function feedView() {
@@ -426,12 +438,12 @@ async function doAuth(kind) {
 }
 
 function startSession(u) {
-  me = u.uid; meLabel = u.displayName || u.email || ''; loaded = false; authState = 'in'; tab = 'home'; ask = null; profileOpen = false; profileErr = ''; profileOk = '';
+  me = u.uid; meLabel = u.displayName || u.email || ''; loaded = false; authState = 'in'; tab = 'home'; ask = null; profileOpen = false; profileEditing = false; profileErr = ''; profileOk = '';
   unsub = fb.onSnapshot(fb.collection(db, 'users', me, 'ponds'), applySnap, () => { loaded = true; flash(t('eSync')); render(); });
 }
 function endSession() {
   if (unsub) unsub();
-  unsub = null; me = null; meLabel = ''; loaded = false; authState = 'out'; authMode = 'in'; tab = 'home'; ask = null; profileOpen = false; profileErr = ''; profileOk = '';
+  unsub = null; me = null; meLabel = ''; loaded = false; authState = 'out'; authMode = 'in'; tab = 'home'; ask = null; profileOpen = false; profileEditing = false; profileErr = ''; profileOk = '';
   S.cycles = []; S.feed = []; S.exp = []; S.cur = null;
   Object.keys(last).forEach(k => delete last[k]);
 }
@@ -488,7 +500,9 @@ document.addEventListener('click', e => {
   const b = e.target.closest('[data-act]'); if (!b) return;
   const a = b.dataset.act;
   ask = null;
-  if (a === 'profile') { profileOpen = !profileOpen; profileErr = ''; profileOk = ''; }
+  if (a === 'profile') { profileOpen = !profileOpen; profileEditing = false; profileErr = ''; profileOk = ''; }
+  else if (a === 'editprofile') { profileEditing = true; profileErr = ''; profileOk = ''; }
+  else if (a === 'profilecancel') { profileEditing = false; profileErr = ''; profileOk = ''; }
   else if (a === 'saveprofile') { saveProfile(); return; }
   else if (a === 'profilereset') { resetCurrentPassword(); return; }
   else if (a === 'tab') tab = b.dataset.t;
@@ -497,7 +511,7 @@ document.addEventListener('click', e => {
   else if (a === 'toup' || a === 'toin') { authMode = a === 'toup' ? 'up' : 'in'; authErr = ''; authOk = ''; }
   else if (a === 'toforgot') { authMode = 'forgot'; authErr = ''; authOk = ''; }
   else if (a === 'sendreq') { sendReset(); return; }
-  else if (a === 'askout') { ask = 'out'; profileOpen = true; }
+  else if (a === 'askout') { ask = 'out'; profileOpen = true; profileEditing = false; }
   else if (a === 'out') { profileOpen = false; fb.signOut(auth); return; }
   else if (a === 'import') importLegacy();
   else if (a === 'askdel') ask = 'del:' + b.dataset.id;
