@@ -4,50 +4,56 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#0f766e">
+<meta name="theme-color" content="#fbf7f3">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
-<title>Shrimp Farm Ledger</title>
+<title>Aqua Mitra</title>
 <style>
-:root{--bg:#f6f8f7;--card:#fff;--ink:#0f2a26;--mute:#5f7772;--line:#e1e9e6;--field:#f1f5f4;--accent:#0f766e;--on:#fff;--good:#15803d;--bad:#c62828;--goodbg:#dcfce7;--shadow:0 1px 3px rgba(15,42,38,.08);color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0d1a18;--card:#15282a;--ink:#e8f3f0;--mute:#9bb3ae;--line:#27413f;--field:#0f1f1e;--accent:#2dd4bf;--on:#06201c;--good:#4ade80;--bad:#f87171;--goodbg:#12361f;--shadow:none;color-scheme:dark}}
-:root[data-theme="dark"]{--bg:#0d1a18;--card:#15282a;--ink:#e8f3f0;--mute:#9bb3ae;--line:#27413f;--field:#0f1f1e;--accent:#2dd4bf;--on:#06201c;--good:#4ade80;--bad:#f87171;--goodbg:#12361f;--shadow:none;color-scheme:dark}
+:root{--bg:#fbf7f3;--card:#fff;--ink:#16263a;--mute:#6b7785;--line:#ece5de;--field:#f6f1ec;--accent:#db4109;--on:#fff;--navy:#16263a;--tint:#fff0e8;--good:#15803d;--bad:#c62828;--goodbg:#dcfce7;--shadow:0 2px 8px rgba(22,38,58,.07);color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12151a;--card:#1c2028;--ink:#f3efeb;--mute:#a2a9b3;--line:#2b313b;--field:#151920;--accent:#ff7a45;--on:#1a0d06;--navy:#0b1f36;--tint:#3a2217;--good:#4ade80;--bad:#f87171;--goodbg:#12361f;--shadow:none;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#12151a;--card:#1c2028;--ink:#f3efeb;--mute:#a2a9b3;--line:#2b313b;--field:#151920;--accent:#ff7a45;--on:#1a0d06;--navy:#0b1f36;--tint:#3a2217;--good:#4ade80;--bad:#f87171;--goodbg:#12361f;--shadow:none;color-scheme:dark}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:19px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans Telugu",sans-serif}
 #app{max-width:560px;margin:0 auto;padding:14px 16px 56px}
-.top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:4px 0 14px}
-h1{font-size:22px;margin:0;line-height:1.25}
+.hdr{display:flex;align-items:center;gap:12px;margin:4px 0 16px;padding:12px 14px;border-radius:20px;background:var(--card);box-shadow:var(--shadow)}
+.hdr img{width:56px;height:56px;border-radius:14px;flex:none;background:#fff;object-fit:contain;border:1px solid var(--line)}
+.hdr div{flex:1;min-width:0}
+.hdr small{display:block;font-size:14px;color:var(--mute)}
+h1{font-size:24px;margin:0;line-height:1.15;font-weight:800;letter-spacing:-.3px}
 h2{font-size:20px;margin:0 0 8px}
 .mute{color:var(--mute);font-size:15px;margin:8px 0 0}
-.card{background:var(--card);border-radius:18px;padding:16px;margin:14px 0;box-shadow:var(--shadow)}
+.card{background:var(--card);border-radius:20px;padding:16px;margin:14px 0;box-shadow:var(--shadow)}
 .row{display:flex;gap:10px;align-items:center}
 .row>select{flex:1}
 .row input{flex:1;min-width:0}
 label{display:block;font-size:16px;color:var(--mute);margin:12px 0 0}
 input,select{width:100%;font:inherit;font-size:21px;min-height:58px;padding:8px 14px;margin-top:6px;border:2px solid transparent;border-radius:14px;background:var(--field);color:var(--ink)}
-input:focus,select:focus{outline:none;border-color:var(--accent)}
+input:focus,select:focus{outline:none;border-color:var(--accent);background:var(--card)}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .btn{font:inherit;font-weight:700;font-size:20px;min-height:60px;width:100%;margin-top:16px;border:0;border-radius:16px;background:var(--accent);color:var(--on);cursor:pointer}
 .btn:active{opacity:.85}
 .btn.sec{background:transparent;color:var(--accent);box-shadow:inset 0 0 0 2px var(--accent);margin-top:10px}
-.btn.danger{background:var(--bad);color:#fff;box-shadow:none}
+.btn.danger{background:#c62828;color:#fff;box-shadow:none}
 .row .btn{width:auto;margin:6px 0 0;padding:0 18px;min-height:58px}
-.lang{font:inherit;font-weight:700;font-size:17px;min-height:48px;padding:0 16px;border:0;border-radius:24px;background:var(--card);color:var(--accent);box-shadow:var(--shadow);cursor:pointer;white-space:nowrap}
-.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0}
-.tabs button{font:inherit;font-size:17px;font-weight:700;min-height:58px;border:0;border-radius:14px;background:var(--card);color:var(--ink);box-shadow:var(--shadow);cursor:pointer;padding:4px}
+.lang{font:inherit;font-weight:700;font-size:17px;min-height:48px;padding:0 16px;border:0;border-radius:99px;background:transparent;color:var(--accent);box-shadow:inset 0 0 0 2px var(--accent);cursor:pointer;white-space:nowrap;flex:none}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin:14px 0;padding:5px;background:var(--line);border-radius:18px}
+.tabs button{font:inherit;font-size:17px;font-weight:700;min-height:54px;border:0;border-radius:14px;background:transparent;color:var(--ink);cursor:pointer;padding:4px}
 .tabs button.on{background:var(--accent);color:var(--on)}
 .li{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:12px 0;border-top:1px solid var(--line)}
 .li:first-of-type{border-top:0}
 .x{font:inherit;font-size:28px;width:52px;height:52px;border:0;background:transparent;color:var(--bad);cursor:pointer;flex:none}
 .yn{display:flex;gap:8px;flex:none}
 .mini{font:inherit;font-weight:700;font-size:18px;min-height:52px;padding:0 18px;border-radius:14px;border:0;box-shadow:inset 0 0 0 2px var(--accent);background:transparent;color:var(--accent);cursor:pointer}
-.mini.yes{background:var(--bad);box-shadow:none;color:#fff}
-.hero{text-align:center;border-radius:18px;padding:20px 16px;margin:14px 0;background:var(--accent);color:var(--on);font-size:17px}
-.hero b{display:block;font-size:38px;line-height:1.2}
+.mini.yes{background:#c62828;box-shadow:none;color:#fff}
+.hero{text-align:center;border-radius:20px;padding:22px 16px;margin:14px 0;background:var(--navy);color:#fff;font-size:17px}
+.hero b{display:block;font-size:40px;line-height:1.2}
 .stats{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.stat{background:var(--card);border-radius:16px;padding:14px;box-shadow:var(--shadow)}
+.stat{background:var(--card);border-radius:18px;padding:14px;box-shadow:var(--shadow)}
 .stat span{display:block;font-size:15px;color:var(--mute)}
 .stat b{font-size:26px}
+.stat.navy{background:var(--navy);color:#fff}
+.stat.orange{background:var(--accent);color:var(--on)}
+.stat.navy span,.stat.orange span{color:inherit;opacity:.85}
 .bar{height:10px;border-radius:5px;background:var(--line);margin:5px 0 12px;overflow:hidden}
 .bar i{display:block;height:100%;background:var(--accent)}
 .split{display:flex;justify-content:space-between;gap:8px}
@@ -56,7 +62,10 @@ table{width:100%;border-collapse:collapse;font-size:17px}
 th,td{text-align:right;padding:10px 6px;border-top:1px solid var(--line);white-space:nowrap}
 th:first-child,td:first-child{text-align:left}
 th{font-size:14px;color:var(--mute);border-top:0}
-.pond{display:block;width:100%;text-align:left;font:inherit;color:inherit;background:var(--card);border:0;border-radius:18px;padding:16px;margin:12px 0;cursor:pointer;min-height:80px;box-shadow:var(--shadow)}
+.pond{display:flex;align-items:center;gap:14px;width:100%;text-align:left;font:inherit;color:inherit;background:var(--card);border:0;border-radius:20px;padding:14px;margin:12px 0;cursor:pointer;min-height:84px;box-shadow:var(--shadow)}
+.av{flex:none;width:54px;height:54px;border-radius:50%;background:var(--tint);color:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:21px}
+.pond.done .av{background:var(--line);color:var(--mute)}
+.pb{flex:1;min-width:0}
 .pond b{font-size:21px}
 .pond .split{align-items:center;margin-bottom:4px}
 .badge{font-size:14px;font-weight:700;padding:3px 12px;border-radius:99px;background:var(--line);color:var(--mute)}
@@ -70,7 +79,8 @@ th{font-size:14px;color:var(--mute);border-top:0}
 <div id="app"></div>
 <script>
 const T = {
-  title: ['Shrimp Farm Ledger', 'రొయ్యల చెరువు లెక్కలు'],
+  title: ['Aqua Mitra', 'ఆక్వా మిత్ర'],
+  tagline: ['Pond records made simple', 'చెరువు లెక్కలు సులభంగా'],
   home: ['Home', 'హోమ్'],
   activePonds: ['Active ponds', 'నడుస్తున్న చెరువులు'],
   feedToday: ['Feed today', 'ఈరోజు మేత'],
@@ -184,7 +194,7 @@ function stats(id) {
 const cur = () => S.cycles.find(c => c.id === S.cur);
 
 function topbar() {
-  return `<div class="top"><h1>🦐 ${t('title')}</h1><button class="lang" data-act="lang">${te() ? 'English' : 'తెలుగు'}</button></div>`;
+  return `<div class="hdr"><img src="icon-192.png" alt=""><div><h1>${t('title')}</h1><small>${t('tagline')}</small></div><button class="lang" data-act="lang">${te() ? 'English' : 'తెలుగు'}</button></div>`;
 }
 function head() {
   return topbar() + `<div class="row"><select id="cyc">${S.cycles.map(c => `<option value="${c.id}" ${c.id === S.cur ? 'selected' : ''}>${esc(pn(c.name))}</option>`).join('')}</select><button class="btn sec" data-act="home">⌂ ${t('home')}</button></div>`;
@@ -213,9 +223,9 @@ function homeView() {
   const kg = sum(S.feed.filter(x => x.date === d), x => x.kg);
   const card = c => {
     const f = S.feed.filter(x => x.cid === c.id), tk = sum(f.filter(x => x.date === d), x => x.kg), last = newest(f)[0];
-    return `<button class="pond" data-act="open" data-id="${c.id}"><div class="split"><b>${esc(pn(c.name))}</b><span class="badge ${c.done ? '' : 'live'}">${t(c.done ? 'completed' : 'active')}</span></div><div class="mute" style="margin:0">${t('today')}: ${num(tk)} kg · ${last ? t('lastFeed') + ' ' + dt(last.date) + (last.time ? ', ' + tm(last.time) : '') : t('noFeed')}</div></button>`;
+    return `<button class="pond ${c.done ? 'done' : ''}" data-act="open" data-id="${c.id}"><span class="av">${esc(String(c.name).replace(/^Pond\s*/i, '').slice(0, 3) || '🦐')}</span><div class="pb"><div class="split"><b>${esc(pn(c.name))}</b><span class="badge ${c.done ? '' : 'live'}">${t(c.done ? 'completed' : 'active')}</span></div><div class="mute" style="margin:0">${t('today')}: ${num(tk)} kg · ${last ? t('lastFeed') + ' ' + dt(last.date) + (last.time ? ', ' + tm(last.time) : '') : t('noFeed')}</div></div></button>`;
   };
-  return topbar() + `<div class="stats"><div class="stat"><span>${t('activePonds')}</span><b>${act.length}</b></div><div class="stat"><span>${t('feedToday')}</span><b>${num(kg)} kg</b></div></div><h2 style="margin:20px 0 0">${t('yourPonds')}</h2>${ordered.map(card).join('')}<button class="btn" data-act="newc">${t('addPondBtn')}</button>`;
+  return topbar() + `<div class="stats"><div class="stat navy"><span>${t('activePonds')}</span><b>${act.length}</b></div><div class="stat orange"><span>${t('feedToday')}</span><b>${num(kg)} kg</b></div></div><h2 style="margin:20px 0 0">${t('yourPonds')}</h2>${ordered.map(card).join('')}<button class="btn" data-act="newc">${t('addPondBtn')}</button>`;
 }
 
 function feedView() {

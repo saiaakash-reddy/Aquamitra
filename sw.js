@@ -1,5 +1,5 @@
 // Change the version number whenever you update the app, so phones fetch the new files.
-const CACHE = 'shrimp-ledger-v2';
+const CACHE = 'aqua-mitra-v4';
 const FILES = ['./', 'index.html', 'manifest.json', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', e => {
