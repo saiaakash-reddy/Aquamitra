@@ -45,7 +45,8 @@ input:focus,select:focus{outline:none;border-color:var(--accent);background:var(
 .yn{display:flex;gap:8px;flex:none}
 .mini{font:inherit;font-weight:700;font-size:18px;min-height:52px;padding:0 18px;border-radius:14px;border:0;box-shadow:inset 0 0 0 2px var(--accent);background:transparent;color:var(--accent);cursor:pointer}
 .mini.yes{background:#c62828;box-shadow:none;color:#fff}
-.greeting{margin:14px 0 18px;padding:18px 16px;border-radius:18px;background:var(--tint);color:var(--ink);font-size:22px;font-weight:800}.hero{text-align:center;border-radius:20px;padding:22px 16px;margin:14px 0;background:var(--navy);color:#fff;font-size:17px}
+.greeting{margin:14px 0 18px;padding:18px 16px;border-radius:18px;background:var(--tint);color:var(--ink);font-size:22px;font-weight:800}
+.developer-credit{text-align:center;color:var(--mute);font-size:12px;line-height:1.4;margin:28px 0 0;padding:8px 0 2px;font-weight:400}.hero{text-align:center;border-radius:20px;padding:22px 16px;margin:14px 0;background:var(--navy);color:#fff;font-size:17px}
 .hero b{display:block;font-size:40px;line-height:1.2}
 .stats{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .stat{background:var(--card);border-radius:18px;padding:14px;box-shadow:var(--shadow)}
@@ -73,7 +74,7 @@ th{font-size:14px;color:var(--mute);border-top:0}
 .pfx{display:flex;align-items:center;padding:0 16px;min-height:58px;margin-top:6px;border-radius:14px;background:var(--line);font-weight:700;font-size:20px}
 .chk{display:flex;align-items:center;color:var(--mute);font-size:16px}
 input[type=checkbox]{width:26px;min-height:26px;height:26px;margin:0 10px 0 0;padding:0}
-.ok{color:var(--good);font-weight:600;font-size:16px;margin:12px 0 0}
+details summary{cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:8px}details[open] summary{margin-bottom:12px}h3{font-size:17px;margin:16px 0 4px}.ok{color:var(--good);font-weight:600;font-size:16px;margin:12px 0 0}
 .err{color:var(--bad);font-weight:600;font-size:16px;margin:12px 0 0}
 #msg{position:fixed;left:50%;transform:translateX(-50%);top:calc(12px + env(safe-area-inset-top,0px));background:var(--ink);color:var(--bg);padding:12px 18px;border-radius:12px;font-size:17px;display:none;z-index:5;max-width:92%}
 </style>
@@ -89,6 +90,15 @@ const T = {
   namePlaceholder: ['Enter your name', 'మీ పేరు నమోదు చేయండి'],
   eFarmerName: ['Please enter your name.', 'దయచేసి మీ పేరు నమోదు చేయండి.'],
   profile: ['Profile', 'ప్రొఫైల్'],
+  history: ['Pond history', 'చెరువుల చరిత్ర'],
+  historyTitle: ['Previous ponds', 'గత చెరువులు'],
+  historyEmpty: ['No harvested or deleted ponds yet.', 'ఇంకా పంట పూర్తయిన లేదా తొలగించిన చెరువులు లేవు.'],
+  harvested: ['Harvested / completed', 'పంట పూర్తయింది'],
+  deleted: ['Deleted', 'తొలగించబడింది'],
+  pondStarted: ['Started', 'ప్రారంభం'],
+  feedTotal: ['Total feed', 'మొత్తం మేత'],
+  costTotal: ['Total investment', 'మొత్తం పెట్టుబడి'],
+  eDuplicate: ['A pond with this name already exists. Please use a different name.', 'ఈ పేరుతో చెరువు ఇప్పటికే ఉంది. వేరే పేరు ఇవ్వండి.'],
   changeName: ['Change farmer name', 'రైతు పేరు మార్చండి'],
   saveName: ['Save name', 'పేరు సేవ్ చేయండి'],
   cancel: ['Cancel', 'రద్దు'],
@@ -227,6 +237,7 @@ const cfgMissing = String(firebaseConfig.apiKey).startsWith('PASTE');
 let fb = null, auth = null, db = null, me = null, meLabel = '', loaded = false, unsub = null;
 let authState = 'loading', authMode = 'in', authErr = '', authOk = '', authEm = '', authName = '';
 let profileOpen = false, profileEditing = false, profileErr = '', profileOk = '';
+let pondHistory = [], unsubHistory = null;
 const last = {}; // last version of each pond that was sent to the server
 
 // Each pond is one document: users/{userId}/ponds/{pondId}, holding its feed log and costs.
@@ -289,7 +300,7 @@ function profileMenu() {
   const nameEditor = profileEditing
     ? `<label>${t('farmerName')}<input id="profile-name" autocomplete="name" maxlength="80" value="${esc(name)}" placeholder="${t('namePlaceholder')}"></label><div class="g2"><button class="btn" data-act="saveprofile">${t('saveName')}</button><button class="btn sec" data-act="profilecancel">${t('cancel')}</button></div>`
     : `<button class="btn" data-act="editprofile">${t('changeName')}</button>`;
-  return `<div class="profile-menu card"><div class="profile-ident"><div class="av">${esc((meLabel || email || 'F').trim().charAt(0).toUpperCase())}</div><div class="ptext"><b>${esc(meLabel || email)}</b><p class="mute">${esc(email)}</p></div></div>${nameEditor}${profileErr ? `<p class="err">${t(profileErr)}</p>` : ''}${profileOk ? `<p class="ok">${t(profileOk)}</p>` : ''}<button class="btn sec" data-act="lang">${te() ? 'English' : 'తెలుగు'}</button><button class="btn sec" data-act="profilereset">${t('resetPassword')}</button>${ask === 'out' ? `<p>${t('askOut')}</p><div class="g2"><button class="btn danger" data-act="out">${t('yes')}</button><button class="btn sec" data-act="no">${t('no')}</button></div>` : `<button class="btn sec" data-act="askout">${t('logout')}</button>`}</div>`;
+  return `<div class="profile-menu card"><div class="profile-ident"><div class="av">${esc((meLabel || email || 'F').trim().charAt(0).toUpperCase())}</div><div class="ptext"><b>${esc(meLabel || email)}</b><p class="mute">${esc(email)}</p></div></div>${nameEditor}${profileErr ? `<p class="err">${t(profileErr)}</p>` : ''}${profileOk ? `<p class="ok">${t(profileOk)}</p>` : ''}<button class="btn sec" data-act="history">${t('history')}</button><button class="btn sec" data-act="lang">${te() ? 'English' : 'తెలుగు'}</button><button class="btn sec" data-act="profilereset">${t('resetPassword')}</button>${ask === 'out' ? `<p>${t('askOut')}</p><div class="g2"><button class="btn danger" data-act="out">${t('yes')}</button><button class="btn sec" data-act="no">${t('no')}</button></div>` : `<button class="btn sec" data-act="askout">${t('logout')}</button>`}</div>`;
 }
 
 async function saveProfile() {
@@ -342,6 +353,24 @@ function newView() {
   return topbar() + (lg ? `<div class="card"><p style="margin:0">${t('importCard')}</p><button class="btn" data-act="import">${t('importBtn')}</button></div>` : '') + `<div class="card"><h2>${t(first ? 'welcome' : 'addPond')}</h2><p class="mute">${t('addPondInfo')}</p><label>${t('pondName')}<div class="row"><span class="pfx">${t('pond')}</span><input id="c-name" placeholder="${t('numOrName')}" value="${S.cycles.length + 1}"></div></label><p class="mute">${t('nameHint')}</p><label>${t('startDate')}<input id="c-date" type="date" value="${today()}"></label><label>${t('fpLabel')}<input id="c-fp" type="number" inputmode="decimal" min="0" step="any" placeholder="0"></label><p class="mute">${t('fpOnce')}</p><button class="btn" data-act="addc">${t('addPondGo')}</button>${first ? '' : `<button class="btn sec" data-act="cancel">${t('cancel')}</button>`}</div>`;
 }
 
+function historyView() {
+  const completed = S.cycles.filter(c => c.done).map(c => ({
+    id: c.id, name: c.name, start: c.start, feedPrice: c.feedPrice,
+    status: 'harvested', feed: S.feed.filter(x => x.cid === c.id),
+    exp: S.exp.filter(x => x.cid === c.id), archivedAt: 0
+  }));
+  const all = [...completed, ...pondHistory].sort((a, b) => (b.archivedAt || b.created || 0) - (a.archivedAt || a.created || 0));
+  const cards = all.map(p => {
+    const feed = p.feed || [], exp = p.exp || [];
+    const kg = sum(feed, x => x.kg), feedCost = sum(feed, x => x.kg * x.price);
+    const otherCost = sum(exp, x => x.amt), total = feedCost + otherCost;
+    const feedRows = feed.length ? `<h3>${t('feedLog')}</h3>${newest(feed).map(x => `<div class="li"><div>${dt(x.date)}${x.time ? ', ' + tm(x.time) : ''}<div class="mute" style="margin:0">${num(x.kg)} kg · ${inr(x.kg * x.price)}</div></div></div>`).join('')}` : '';
+    const expRows = exp.length ? `<h3>${t('costs')}</h3>${newest(exp).map(x => `<div class="li"><div>${dt(x.date)}<div class="mute" style="margin:0">${cat(x.cat)}${x.note ? ' · ' + esc(x.note) : ''} · ${inr(x.amt)}</div></div></div>`).join('')}` : '';
+    return `<details class="card"><summary><b>${esc(pn(p.name))}</b> <span class="badge">${t(p.status === 'deleted' ? 'deleted' : 'harvested')}</span></summary><p class="mute">${t('pondStarted')}: ${p.start ? dt(p.start) : '—'}</p><div class="stats"><div class="stat"><span>${t('feedTotal')}</span><b>${num(kg)} kg</b></div><div class="stat"><span>${t('costTotal')}</span><b>${inr(total)}</b></div></div>${p.archivedAt ? `<p class="mute">${t('deleted')}: ${new Date(p.archivedAt).toLocaleDateString(loc())}</p>` : ''}${feedRows}${expRows}</details>`;
+  }).join('');
+  return topbar() + `<button class="btn sec" data-act="home">⌂ ${t('home')}</button><h2>${t('historyTitle')}</h2>${cards || `<div class="card"><p class="mute">${t('historyEmpty')}</p></div>`}`;
+}
+
 function homeView() {
   const d = today(), act = S.cycles.filter(c => !c.done), ordered = [...act, ...S.cycles.filter(c => c.done)];
   const kg = sum(S.feed.filter(x => x.date === d), x => x.kg);
@@ -352,7 +381,7 @@ function homeView() {
   const hour = new Date().getHours();
   const greetingKey = hour < 12 ? 'goodMorning' : hour < 17 ? 'goodAfternoon' : 'goodEvening';
   const farmer = (meLabel || auth.currentUser?.displayName || '').trim() || t('farmerName');
-  return topbar() + `<div class="greeting">${t(greetingKey, esc(farmer))}</div><div class="stats"><div class="stat navy"><span>${t('activePonds')}</span><b>${act.length}</b></div><div class="stat orange"><span>${t('feedToday')}</span><b>${num(kg)} kg</b></div></div><h2 style="margin:20px 0 0">${t('yourPonds')}</h2>${ordered.map(card).join('')}<button class="btn" data-act="newc">${t('addPondBtn')}</button>`;
+  return topbar() + `<div class="greeting">${t(greetingKey, esc(farmer))}</div><div class="stats"><div class="stat navy"><span>${t('activePonds')}</span><b>${act.length}</b></div><div class="stat orange"><span>${t('feedToday')}</span><b>${num(kg)} kg</b></div></div><h2 style="margin:20px 0 0">${t('yourPonds')}</h2>${ordered.map(card).join('')}<button class="btn" data-act="newc">${t('addPondBtn')}</button><p class="developer-credit">Developed by Lingareddy Sai Aakash Reddy 🙂</p>`;
 }
 
 function feedView() {
@@ -440,13 +469,28 @@ async function doAuth(kind) {
 function startSession(u) {
   me = u.uid; meLabel = u.displayName || u.email || ''; loaded = false; authState = 'in'; tab = 'home'; ask = null; profileOpen = false; profileEditing = false; profileErr = ''; profileOk = '';
   unsub = fb.onSnapshot(fb.collection(db, 'users', me, 'ponds'), applySnap, () => { loaded = true; flash(t('eSync')); render(); });
+  if (unsubHistory) unsubHistory();
+  unsubHistory = fb.onSnapshot(fb.collection(db, 'users', me, 'history'), snap => { pondHistory = snap.docs.map(d => ({ id: d.id, ...d.data() })); if (tab === 'history') render(); }, () => flash(t('eSync')));
 }
 function endSession() {
   if (unsub) unsub();
-  unsub = null; me = null; meLabel = ''; loaded = false; authState = 'out'; authMode = 'in'; tab = 'home'; ask = null; profileOpen = false; profileEditing = false; profileErr = ''; profileOk = '';
+  if (unsubHistory) unsubHistory();
+  unsub = null; unsubHistory = null; pondHistory = []; me = null; meLabel = ''; loaded = false; authState = 'out'; authMode = 'in'; tab = 'home'; ask = null; profileOpen = false; profileEditing = false; profileErr = ''; profileOk = '';
   S.cycles = []; S.feed = []; S.exp = []; S.cur = null;
   Object.keys(last).forEach(k => delete last[k]);
 }
+function archivePond(c, status) {
+  if (!fb || !me || !c) return;
+  const record = {
+    name: c.name, start: c.start || '', feedPrice: c.feedPrice || 0,
+    done: !!c.done, created: c.created || 0, status,
+    archivedAt: Date.now(),
+    feed: S.feed.filter(x => x.cid === c.id).map(cf),
+    exp: S.exp.filter(x => x.cid === c.id).map(ce)
+  };
+  fb.setDoc(fb.doc(db, 'users', me, 'history', c.id), record).catch(() => flash(t('eSync')));
+}
+
 function applySnap(snap) {
   const cy = [], fd = [], ex = [];
   snap.docs.forEach(d => {
@@ -483,6 +527,7 @@ function render() {
   if (authState === 'loading' || (authState === 'in' && !loaded)) { $('#app').innerHTML = topbar() + `<div class="card"><p>${t('loading')}</p></div>`; return; }
   if (authState === 'nofb') { $('#app').innerHTML = topbar() + `<div class="card"><p>${t(cfgMissing ? 'needConfig' : 'needNet')}</p></div>`; return; }
   if (authState === 'out') { $('#app').innerHTML = authView(); return; }
+  if (tab === 'history') { $('#app').innerHTML = historyView(); return; }
   if (!S.cycles.length || tab === 'new') { $('#app').innerHTML = newView(); return; }
   if (!cur()) S.cur = S.cycles[0].id;
   if (tab === 'home') { $('#app').innerHTML = homeView(); return; }
@@ -501,6 +546,7 @@ document.addEventListener('click', e => {
   const a = b.dataset.act;
   ask = null;
   if (a === 'profile') { profileOpen = !profileOpen; profileEditing = false; profileErr = ''; profileOk = ''; }
+  else if (a === 'history') { tab = 'history'; profileOpen = false; ask = null; }
   else if (a === 'editprofile') { profileEditing = true; profileErr = ''; profileOk = ''; }
   else if (a === 'profilecancel') { profileEditing = false; profileErr = ''; profileOk = ''; }
   else if (a === 'saveprofile') { saveProfile(); return; }
@@ -524,6 +570,8 @@ document.addEventListener('click', e => {
   else if (a === 'setfp') { const p = pos('fp'); if (!p) return flash(t('eFp')); cur().feedPrice = p; save(); flash(t('okFp')); }
   else if (a === 'addc') {
     const n = val('c-name').trim().replace(/^(pond|చెరువు)\s*/i, ''); if (!n) return flash(t('eName'));
+    const normalized = n.replace(/\s+/g, ' ').toLocaleLowerCase();
+    if (S.cycles.some(p => !p.done && String(p.name).replace(/^(pond|చెరువు)\s*/i, '').replace(/\s+/g, ' ').toLocaleLowerCase() === normalized)) return flash(t('eDuplicate'));
     const fp = pos('c-fp'); if (!fp) return flash(t('eFp'));
     const c = { id: uid(), name: 'Pond ' + n, start: val('c-date'), feedPrice: fp, created: Date.now() }; S.cycles.push(c); S.cur = c.id; tab = 'feed'; save();
   } else if (a === 'addf') {
@@ -536,8 +584,9 @@ document.addEventListener('click', e => {
   } else if (a === 'del') {
     S[b.dataset.k] = S[b.dataset.k].filter(x => x.id !== b.dataset.id); save();
   } else if (a === 'delc') {
-    const id = S.cur;
-    S.cycles = S.cycles.filter(c => c.id !== id);
+    const id = S.cur, c = cur();
+    archivePond(c, 'deleted');
+    S.cycles = S.cycles.filter(p => p.id !== id);
     ['feed', 'exp'].forEach(k => S[k] = S[k].filter(x => x.cid !== id));
     S.cur = S.cycles.length ? S.cycles[0].id : null; tab = 'home'; save();
   }
