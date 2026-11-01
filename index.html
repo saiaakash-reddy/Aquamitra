@@ -593,7 +593,42 @@ document.addEventListener('click', e => {
   render();
 });
 
+// Keep Android/Chrome Back navigation inside Aqua Mitra first.
+// From inner screens, Back returns to the dashboard. From the dashboard,
+// ask before navigating away from the app.
+let aquaBackGuardReady = false;
+function installAquaBackGuard() {
+  if (aquaBackGuardReady) return;
+  aquaBackGuardReady = true;
+  try {
+    history.replaceState({ aquaMitraPage: true }, '', location.href);
+    history.pushState({ aquaMitraGuard: true }, '', location.href);
+  } catch (e) {}
+  window.addEventListener('popstate', () => {
+    if (tab !== 'home') {
+      tab = 'home';
+      profileOpen = false;
+      profileEditing = false;
+      ask = null;
+      render();
+      history.pushState({ aquaMitraGuard: true }, '', location.href);
+      return;
+    }
+    const leave = window.confirm(te()
+      ? 'ఆక్వా మిత్ర నుండి బయటకు వెళ్లాలనుకుంటున్నారా?'
+      : 'Are you sure you want to leave Aqua Mitra?');
+    if (leave) {
+      // Browsers do not allow a webpage to close its own tab. Going back
+      // returns to the page that was open before Aqua Mitra.
+      history.back();
+    } else {
+      history.pushState({ aquaMitraGuard: true }, '', location.href);
+    }
+  });
+}
+
 if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js').catch(() => {}); }
+installAquaBackGuard();
 render();
 (async () => {
   if (cfgMissing) { authState = 'nofb'; return render(); }
